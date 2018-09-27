@@ -8,5 +8,20 @@
   <body>
     <img src="assets/icon.png" id="test-image"/>
     <div id="root"></div>
+    <script src="/secrets.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/5.5.1/firebase.js"></script>
+    <script>
+        // Initialize Firebase
+        var config = {
+            apiKey: window.apiKey,
+            authDomain: "chatastrophe-5ab03.firebaseapp.com",
+            databaseURL: "https://chatastrophe-5ab03.firebaseio.com",
+            projectId: "chatastrophe-5ab03",
+            storageBucket: "chatastrophe-5ab03.appspot.com",
+            messagingSenderId: window.messagingSenderId,
+        }
+        window.firebase = firebase
+        firebase.initializeApp(config)
+    </script>
   </body>
 </html>

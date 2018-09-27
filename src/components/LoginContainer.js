@@ -5,6 +5,7 @@ class LoginContainer extends Component {
     state = {
         email: '',
         password: '',
+        error: '',
     }
 
     handleEmailChange = e => this.setState({ email: e.target.value })
@@ -13,7 +14,39 @@ class LoginContainer extends Component {
 
     handleSubmit = e => {
         e.preventDefault()
-        console.log(this.state)
+        if (this.state.email && this.state.password) {
+            this.login()
+        } else {
+            this.setState({ error: 'Please fill in both fields.' })
+        }
+    }
+
+    login() {
+        firebase
+            .auth()
+            .signInWithEmailAndPassword(this.state.email, this.state.password)
+            .then(res => {
+                this.setState({ error: "" })
+                console.log(res)
+            })
+            .catch(err => {
+                if (err.code === 'auth/user-not-found') {
+                    this.signup()
+                } else {
+                    this.setState({ error: err.message })
+                }
+            })
+    }
+
+    signup() {
+        firebase
+            .auth()
+            .createUserWithEmailAndPassword(this.state.email, this.state.password)
+            .then(res => console.log(res))
+            .catch(err => {
+                console.log(err)
+                this.setState({ error: 'Error signing up.' })
+            })
     }
 
     render() {
@@ -34,6 +67,7 @@ class LoginContainer extends Component {
                         value={this.state.password}
                         placeholder="Your password"
                     />
+                    <p className="error">{this.state.error}</p>
                     <button className="red light" type="submit">Login</button>
                 </form>
             </div>
