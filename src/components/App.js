@@ -8,6 +8,8 @@ import './app.css'
 class App extends Component {
     state = {
         user: null,
+        messages: [],
+        messagesLoaded: false,
     }
 
     handleSubmitMessage = msg => {
@@ -23,6 +25,15 @@ class App extends Component {
             .push(data)
     }
 
+    onMessage = snapshot => {
+        const messages = Object.keys(snapshot.val()).map(key => {
+            const msg = snapshot.val()[key]
+            msg.id = key
+            return msg
+        })
+        this.setState({ messages })
+    }
+
     componentDidMount() {
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
@@ -31,6 +42,15 @@ class App extends Component {
                 this.props.history.push('/login')
             }
         })
+        firebase
+            .database()
+            .ref('/messages')
+            .on('value', snapshot => {
+                this.onMessage(snapshot)
+                if (!this.state.messagesLoaded) {
+                    this.setState({ messagesLoaded: true })
+                }
+            })
     }
 
     render() {
@@ -40,9 +60,24 @@ class App extends Component {
                 <Route
                     exact
                     path="/"
-                    render={() => <ChatContainer onSubmit={this.handleSubmitMessage} />}
+                    render={() => (
+                        <ChatContainer 
+                            messages={this.state.messages}
+                            messagesLoaded={this.state.messagesLoaded}
+                            user={this.state.user}
+                            onSubmit={this.handleSubmitMessage}
+                        />)}
                 />
-                <Route path="/users/:id" component={UserContainer} />
+                <Route
+                    path="/users/:id"
+                    render={({ history, match }) => (
+                        <UserContainer
+                            messages={this.state.messages}
+                            messagesLoaded={this.state.messagesLoaded}
+                            userID={match.params.id}
+                        />
+                    )}
+                />
             </div>
         )
     }
