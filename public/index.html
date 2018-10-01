@@ -22,5 +22,23 @@
         window.firebase = firebase
         firebase.initializeApp(config)
     </script>
+    <script>
+        // Service Worker initiation
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', function() {
+                navigator.serviceWorker.register('firebase-messaging-sw.js')
+                    .then(function(registration) {
+                        console.log('Registered!')
+                    }, function(err) {
+                        console.log('Service Worker registration failed: ' + err)
+                    })
+                    .catch(function(err){
+                        console.log('Error: ' + err)
+                })
+            })
+        } else {
+            console.log('Service worker is not supported')
+        }
+    </script>
   </body>
 </html>
