@@ -3,6 +3,7 @@ import { Route, withRouter } from 'react-router-dom'
 import LoginContainer from './LoginContainer'
 import ChatContainer from './ChatContainer'
 import UserContainer from './UserContainer'
+import NotificationResource from '../resources/NotificationResource'
 import './app.css'
 
 class App extends Component {
@@ -19,10 +20,28 @@ class App extends Component {
             user_id: this.state.user.uid,
             timestamp: Date.now()
         }
+
         firebase
             .database()
             .ref('messages/')
             .push(data)
+
+        if (this.deferredPrompt) {
+            this.deferredPrompt.prompt()
+            this.deferredPrompt.userChoice.then(choice => {
+                console.log(choice)
+            })
+            this.deferredPrompt = null
+        }
+    }
+
+    listenForInstallBanner = () => {
+        window.addEventListener('beforeinstallprompt', e => {
+          console.log('beforeinstallprompt Event fired')
+          e.preventDefault()
+          // Stash the event so it can be triggered later.
+          this.deferredPrompt = e
+        })
     }
 
     onMessage = snapshot => {
@@ -34,14 +53,34 @@ class App extends Component {
         this.setState({ messages })
     }
 
+    listenForMessages = () => {
+        firebase
+          .database()
+          .ref('/messages')
+          .on('value', snapshot => {
+            this.onMessage(snapshot)
+            if (!this.state.messagesLoaded) {
+              this.setState({ messagesLoaded: true })
+            }
+        })
+    }
+
     componentDidMount() {
+        this.notifications = new NotificationResource(
+            firebase.messaging(),
+            firebase.database()
+        )
+
         firebase.auth().onAuthStateChanged(user => {
             if (user) {
-                this.setState({user})
+                this.setState({ user })
+                this.listenForMessages()
+                this.notifications.changeUser(user)
             } else {
                 this.props.history.push('/login')
             }
         })
+
         firebase
             .database()
             .ref('/messages')
